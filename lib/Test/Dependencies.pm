@@ -18,11 +18,11 @@ Test::Dependencies - Ensure that your Makefile.PL specifies all module dependenc
 
 =head1 VERSION
 
-Version 0.01
+Version 0.02
 
 =cut
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 =head1 SYNOPSIS
 
@@ -121,9 +121,9 @@ sub ok_dependencies {
 
 =over 4
 
-=item * Jesse Vincent C<< jesse at bestpractical.org >>
+=item * Jesse Vincent C<< <jesse at bestpractical.org> >>
 
-=item * Alex Vandiver C<< alexmv at bestpractical.org >>
+=item * Alex Vandiver C<< <alexmv at bestpractical.org> >>
 
 =item * Zev Benjamin, C<< <zev at cpan.org> >>
 
@@ -173,7 +173,8 @@ LICENCE AND COPYRIGHT
     This module is free software; you can redistribute it and/or modify it
     under the same terms as Perl itself. See perlartistic.
 
-DISCLAIMER OF WARRANTY
+    DISCLAIMER OF WARRANTY
+
     BECAUSE THIS SOFTWARE IS LICENSED FREE OF CHARGE, THERE IS NO WARRANTY
     FOR THE SOFTWARE, TO THE EXTENT PERMITTED BY APPLICABLE LAW. EXCEPT WHEN
     OTHERWISE STATED IN WRITING THE COPYRIGHT HOLDERS AND/OR OTHER PARTIES
