@@ -1,0 +1,11 @@
+abstract: Ensure that your Makefile.PL specifies all module dependencies
+author: Zev Benjamin, C<< <zev at cpan.org> >>
+distribution_type: module
+generated_by: Module::Install version 0.62
+license: perl
+name: Test-Dependencies
+no_index: 
+  directory: 
+    - inc
+    - t
+version: 0.01

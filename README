@@ -1,0 +1,42 @@
+Test-Dependencies
+
+Makes sure that all of the modules that are 'use'd are listed in the
+Makefile.PL as dependencies.
+
+
+INSTALLATION
+
+To install this module, run the following commands:
+
+    perl Makefile.PL
+    make
+    make test
+    make install
+
+
+SUPPORT AND DOCUMENTATION
+
+After installing, you can find documentation for this module with the perldoc command.
+
+    perldoc Test::Dependencies
+
+You can also look for information at:
+
+    Search CPAN
+        http://search.cpan.org/dist/Test-Dependencies
+
+    CPAN Request Tracker:
+        http://rt.cpan.org/NoAuth/Bugs.html?Dist=Test-Dependencies
+
+    AnnoCPAN, annotated CPAN documentation:
+        http://annocpan.org/dist/Test-Dependencies
+
+    CPAN Ratings:
+        http://cpanratings.perl.org/d/Test-Dependencies
+
+COPYRIGHT AND LICENCE
+
+Copyright (C) 2006 Zev Benjamin
+
+This program is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
