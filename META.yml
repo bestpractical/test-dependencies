@@ -1,11 +1,14 @@
 abstract: Ensure that your Makefile.PL specifies all module dependencies
-author: Zev Benjamin, C<< <zev at cpan.org> >>
+author: =over 4
 distribution_type: module
 generated_by: Module::Install version 0.62
-license: perl
+license: unknown
 name: Test-Dependencies
 no_index: 
   directory: 
     - inc
     - t
+requires: 
+  Module::CoreList: 0
+  Pod::Strip: 0
 version: 0.01
