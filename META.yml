@@ -1,8 +1,7 @@
-abstract: Ensure that your Makefile.PL specifies all module dependencies
-author: =over 4
+author: Zev Benjamin <zev@bestpractical.com>
 distribution_type: module
-generated_by: Module::Install version 0.62
-license: unknown
+generated_by: Module::Install version 0.59
+license: perl
 name: Test-Dependencies
 no_index: 
   directory: 
@@ -11,4 +10,4 @@ no_index:
 requires: 
   Module::CoreList: 0
   Pod::Strip: 0
-version: 0.01
+version: 0.02

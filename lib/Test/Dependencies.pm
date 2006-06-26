@@ -121,11 +121,11 @@ sub ok_dependencies {
 
 =over 4
 
-=item * Jesse Vincent C<< <jesse at bestpractical.org> >>
+=item * Jesse Vincent C<< <jesse at bestpractical.com> >>
 
-=item * Alex Vandiver C<< <alexmv at bestpractical.org> >>
+=item * Alex Vandiver C<< <alexmv at bestpractical.com> >>
 
-=item * Zev Benjamin, C<< <zev at cpan.org> >>
+=item * Zev Benjamin C<< <zev at cpan.org> >>
 
 =back
 
@@ -168,7 +168,7 @@ L<http://search.cpan.org/dist/Test-Dependencies>
 =head1 ACKNOWLEDGEMENTS
 
 LICENCE AND COPYRIGHT
-    Copyright (c) 2005, Best Practical Solutions, LLC. All rights reserved.
+    Copyright (c) 2006, Best Practical Solutions, LLC. All rights reserved.
 
     This module is free software; you can redistribute it and/or modify it
     under the same terms as Perl itself. See perlartistic.
