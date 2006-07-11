@@ -1,4 +1,4 @@
-#!perl -T
+#!perl
 
 # yay bootstrap!
 use Test::Dependencies exclude => [qw/Test::Dependencies/];

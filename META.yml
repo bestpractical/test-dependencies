@@ -1,6 +1,8 @@
 author: Zev Benjamin <zev@bestpractical.com>
+build_requires: 
+  Test::Builder::Tester: 0
 distribution_type: module
-generated_by: Module::Install version 0.59
+generated_by: Module::Install version 0.630
 license: perl
 name: Test-Dependencies
 no_index: 
@@ -8,6 +10,10 @@ no_index:
     - inc
     - t
 requires: 
+  B::PerlReq: 0
+  File::Find::Rule: 0
   Module::CoreList: 0
-  Pod::Strip: 0
-version: 0.02
+  PerlReq::Utils: 0
+  Test::Builder::Module: 0
+  YAML: 0
+version: 0.03

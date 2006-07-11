@@ -5,3 +5,10 @@ Revision history for Test-Dependencies
 
 0.02    Wed Jun 21 16:34:14 EDT 2006
         Minor POD cleanups
+
+0.03    Tue Jul 11 16:17:32 EDT 2006
+        Moved to a B::PerlReq backend for determining usage.  We
+        also now use the META.yml file to determine what is listed in
+        Makefile.PL.  We now differentiate between requires and
+        build_requires, and complain if listed requirements are not
+        actually used.

@@ -1,13 +1,14 @@
-#line 1 "inc/Module/Install/Makefile.pm - /usr/local/share/perl/5.8.7/Module/Install/Makefile.pm"
+#line 1
 package Module::Install::Makefile;
 
 use strict 'vars';
 use Module::Install::Base;
 use ExtUtils::MakeMaker ();
 
-use vars qw{$VERSION @ISA};
+use vars qw{$VERSION $ISCORE @ISA};
 BEGIN {
-	$VERSION = '0.59';
+	$VERSION = '0.63';
+	$ISCORE  = 1;
 	@ISA     = qw{Module::Install::Base};
 }
 
@@ -65,6 +66,15 @@ sub clean_files {
     %$clean = (
         %$clean, 
         FILES => join(' ', grep length, $clean->{FILES}, @_),
+    );
+}
+
+sub realclean_files {
+    my $self  = shift;
+    my $realclean = $self->makemaker_args->{realclean} ||= {};
+    %$realclean = (
+        %$realclean, 
+        FILES => join(' ', grep length, $realclean->{FILES}, @_),
     );
 }
 
@@ -132,7 +142,7 @@ sub write {
     }
 
     my $mm = ExtUtils::MakeMaker::WriteMakefile(%args);
-    $self->fix_up_makefile($mm->{FIRST_MAKEFILE});
+    $self->fix_up_makefile($mm->{FIRST_MAKEFILE} || 'Makefile');
 }
 
 sub fix_up_makefile {
@@ -159,6 +169,18 @@ sub fix_up_makefile {
     $makefile =~ s/^(FULLPERL = .*)/$1 "-Iinc"/m;
     $makefile =~ s/^(PERL = .*)/$1 "-Iinc"/m;
 
+    # Module::Install will never be used to build the Core Perl
+    # Sometimes PERL_LIB and PERL_ARCHLIB get written anyway, which breaks
+    # PREFIX/PERL5LIB, and thus, install_share. Blank them if they exist
+    $makefile =~ s/^PERL_LIB = .+/PERL_LIB =/m;
+    #$makefile =~ s/^PERL_ARCHLIB = .+/PERL_ARCHLIB =/m;
+
+    # Perl 5.005 mentions PERL_LIB explicitly, so we have to remove that as well.
+    $makefile =~ s/("?)-I\$\(PERL_LIB\)\1//g;
+
+    # XXX - This is currently unused; not sure if it breaks other MM-users
+    # $makefile =~ s/^pm_to_blib\s+:\s+/pm_to_blib :: /mg;
+
     open  MAKEFILE, "> $makefile_name" or die "fix_up_makefile: Couldn't open $makefile_name: $!";
     print MAKEFILE  "$preamble$makefile$postamble" or die $!;
     close MAKEFILE  or die $!;
@@ -183,4 +205,4 @@ sub postamble {
 
 __END__
 
-#line 312
+#line 334

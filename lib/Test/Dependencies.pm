@@ -3,14 +3,14 @@ package Test::Dependencies;
 use warnings;
 use strict;
 
+use B::PerlReq;
 use Carp;
-use File::Find;
+use File::Find::Rule;
 use Module::CoreList;
-use Pod::Strip;
-use Test::More qw(no_plan);
+use PerlReq::Utils qw(path2mod);
+use YAML qw(LoadFile);
 
-use Exporter;
-our @ISA = qw/Exporter/;
+use base 'Test::Builder::Module';
 
 =head1 NAME
 
@@ -18,11 +18,11 @@ Test::Dependencies - Ensure that your Makefile.PL specifies all module dependenc
 
 =head1 VERSION
 
-Version 0.02
+Version 0.03
 
 =cut
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 =head1 SYNOPSIS
 
@@ -45,6 +45,12 @@ our @EXPORT = qw/ok_dependencies/;
 our $exclude_re;
 
 sub import {
+  my $package = $_[0];
+  my $callerpack = caller;
+  my $tb = __PACKAGE__->builder;
+  $tb->exported_to($callerpack);
+  $tb->no_plan;
+
   if (scalar @_ == 3) {
     # package name, literal exclude, excluded namespaces
     my $exclude = $_[2];
@@ -54,67 +60,147 @@ sub import {
     }
     $exclude_re = join '|', @$exclude;
   } elsif (scalar @_ != 1) {
-    croak "wrong number of arguments while using Test::Dependencies";
+    croak "wrong number of arguments while using Test::Dependencies: " . join ' ', @_;
   }
-  Test::Dependencies->export_to_level(1, '', qw/ok_dependencies/);
+  $package->export_to_level(1, '', qw/ok_dependencies/);
 }
 
+sub _get_files_in {
+  my @dirs = @_;
+  my $rule = File::Find::Rule->new;
+  $rule->or($rule->new
+                 ->directory
+                 ->name('.svn')
+                 ->prune
+                 ->discard,
+            $rule->new
+                 ->directory
+                 ->name('CVS')
+                 ->prune
+                 ->discard,
+            $rule->new
+                 ->name(qr/~$/)
+                 ->discard,
+            $rule->new
+                 ->name(qr/\.pod$/)
+                 ->discard,
+            $rule->new
+                 ->not($rule->new->file)
+                 ->discard,
+            $rule->new);
+  return $rule->in(grep {-e $_} @dirs);
+}
+
+sub _taint_flag {
+  my $filename = shift;
+  open FILE, $filename;
+  my $shebang = <FILE>;
+  close FILE;
+  chomp $shebang;
+  if ($shebang =~ m/^#!.*perl.*-T/) {
+    return '-T';
+  } else {
+    return '';
+  }
+}
+
+sub _get_modules_used_in {
+  my @dirs = @_;
+  my @sourcefiles = _get_files_in(@dirs);
+  my $perl = $^X;
+  my %deps;
+  foreach my $file (@sourcefiles) {
+    my $taint = _taint_flag($file);
+    my $output = `$perl $taint -MO=PerlReq '$file' 2> /dev/null`;
+    # path2mod sucks, but the mod2path that B::PerlReq uses sucks, too
+    my @filedeps = map { s/^perl\((.+)\)$/$1/; path2mod($_) }
+               split /\n/, $output;
+    $deps{$_}++ foreach @filedeps;
+  }
+  return keys %deps;
+}
+
+sub _get_used {
+  return _get_modules_used_in(qw/bin lib/);
+}
+
+sub _get_build_used {
+  return _get_modules_used_in(qw/t/);
+}
+
+=head1 EXPORTED FUNCTIONS
+
+=head2 ok_dependencies
+
+This should be the only test called in the test file.  It scans
+bin/ and lib/ for module usage and t/ for build usage.  It will
+then test that all modules used are listed as required in
+Makefile.PL, all modules used in t/ are listed as build required,
+that all modules listed are actually used, and that modules that
+are listed are not in the core list.
+
+=cut
+
 sub ok_dependencies {
-  my %used;
+  my $tb = __PACKAGE__->builder;
+  my %used = map { $_ => 1 } _get_used;
+  my %build_used = map { $_ => 1 } _get_build_used;
 
-  my $wanted = sub {
-    return unless -f $_;
-    return if $File::Find::dir =~ m!/.svn($|/)!;
-    return if $File::Find::name =~ /~$/;
-    return if $File::Find::name =~ /\.pod$/;
-    local $/;
-    open(FILE, $_) or return;
-    my $data = <FILE>;
-    close(FILE);
-    my $p = Pod::Strip->new;
-    my $code;
-    $p->output_string(\$code);
-    $p->parse_string_document($data);
-    $used{$1}++ while $code =~ /^\s*use\s+([\w:]+)/gm;
-    while ($code =~ m|^\s*use base qw.([\w\s:]+)|gm) {
-      $used{$_}++ for split ' ', $1;
+  # remove modules from build deps if they are hard deps
+  foreach my $mod (keys %used) {
+    delete $build_used{$mod} if exists $build_used{$mod};
+  }
+  
+  my $meta = LoadFile('META.yml') or die 'Could not load META.YML';
+  my %required = exists $meta->{requires} ? %{$meta->{requires}} : ();
+  my %build_required = exists $meta->{build_requires} ? %{$meta->{build_requires}} : ();
+
+  my @in_core;
+  
+  foreach my $mod (sort keys %used) {
+    my $first_in = Module::CoreList->first_release($mod);
+    if (defined $first_in and $first_in <= 5.00803) {
+      delete $used{$mod};
+      push @in_core, $mod if exists $required{$mod};
+      next;
     }
-  };
-
-  for my $dir (qw/ lib bin t /) {
-    if ( -e $dir) {
-      find( { wanted => $wanted,
-              untaint => 1}, $dir);
+    if (defined $exclude_re && $mod =~ m/^($exclude_re)(::|$)/) {
+      delete $used{$mod};
+      next;
     }
+    $tb->ok(exists $required{$mod}, "requires('$mod') in Makefile.PL");
+    delete $used{$mod};
+    delete $required{$mod};
   }
 
-  my %required;
-  { 
-    local $/;
-    ok(open(MAKEFILE,"Makefile.PL"), "Opened Makefile");
-    my $data = <MAKEFILE>;
-    close(FILE);
-    while ($data =~ /^\s*?requires\('([\w:]+)'(?:\s*=>\s*['"]?([\d\.]+)['"]?)?.*?(?:#(.*))?$/gm) {
-      $required{$1} = $2;
-      if (defined $3 and length $3) {
-        $required{$_} = undef for split ' ', $3;
-      }
+  foreach my $mod (sort keys %build_used) {
+    my $first_in = Module::CoreList->first_release($mod);
+    if (defined $first_in and $first_in <= 5.00803) {
+      delete $build_used{$mod};
+      push @in_core, $mod if exists $build_required{$mod};
+      next;
     }
+    if (defined $exclude_re && $mod =~ m/^($exclude_re)(::|$)/) {
+      delete $build_used{$mod};
+      next;
+    }
+    $tb->ok(exists $build_required{$mod}, "build_requires('$mod') in Makefile.PL");
+    delete $build_used{$mod};
+    delete $build_required{$mod};
+  }  
+
+  foreach my $mod (sort @in_core) {
+    $tb->ok(0, "Required module $mod is already in core");
+  }
+  
+  foreach my $mod (sort keys %required) {
+    $tb->ok(0, "$mod is not a dependency");
   }
 
-  for (sort keys %used) {
-    my $first_in = Module::CoreList->first_release($_);
-    next if defined $first_in and $first_in <= 5.00803;
-    next if /^($exclude_re)(::|$)/;
-    ok(exists $required{$_}, "$_ in Makefile.PL");
-    delete $used{$_};
-    delete $required{$_};
+  foreach my $mod (sort keys %build_required) {
+    $tb->ok(0, "$mod is not a build dependency");
   }
 
-  for (sort keys %required) {
-    my $first_in = Module::CoreList->first_release($_, $required{$_});
-    fail("Required module $_ is already in core") if defined $first_in and $first_in <= 5.00803;
-  }
 }
 
 =head1 AUTHORS
@@ -130,6 +216,14 @@ sub ok_dependencies {
 =back
 
 =head1 BUGS
+
+=over 4
+
+=item * Test::Dependencies does not track module version requirements.
+
+=item * Perl version for "already in core" test failures is hardcoded.
+
+=back
 
 Please report any bugs or feature requests to
 C<bug-test-dependencies at rt.cpan.org>, or through the web interface at
@@ -165,9 +259,8 @@ L<http://search.cpan.org/dist/Test-Dependencies>
 
 =back
 
-=head1 ACKNOWLEDGEMENTS
+=head1 LICENCE AND COPYRIGHT
 
-LICENCE AND COPYRIGHT
     Copyright (c) 2006, Best Practical Solutions, LLC. All rights reserved.
 
     This module is free software; you can redistribute it and/or modify it

@@ -1,5 +1,21 @@
-#line 1 "/home/jesse/svk/Test-Dependencies/trunk/inc/Module/Install.pm - /usr/local/share/perl/5.8.7/Module/Install.pm"
+#line 1
 package Module::Install;
+
+# For any maintainers:
+# The load order for Module::Install is a bit magic.
+# It goes something like this...
+#
+# IF ( host has Module::Install installed, creating author mode ) {
+#     1. Makefile.PL calls "use inc::Module::Install"
+#     2. $INC{inc/Module/Install.pm} set to installed version of inc::Module::Install
+#     3. The installed version of inc::Module::Install loads
+#     4. inc::Module::Install calls "require Module::Install"
+#     5. The ./inc/ version of Module::Install loads
+# } ELSE {
+#     1. Makefile.PL calls "use inc::Module::Install"
+#     2. $INC{inc/Module/Install.pm} set to ./inc/ version of Module::Install
+#     3. The ./inc/ version of Module::Install loads
+# }
 
 use 5.004;
 use strict 'vars';
@@ -12,10 +28,15 @@ BEGIN {
     # This is not enforced yet, but will be some time in the next few
     # releases once we can make sure it won't clash with custom
     # Module::Install extensions.
-    $VERSION = '0.59';
+    $VERSION = '0.63';
 }
 
-# inc::Module::Install must be loaded first
+# Whether or not inc::Module::Install is actually loaded, the
+# $INC{inc/Module/Install.pm} is what will still get set as long as
+# the caller loaded module this in the documented manner.
+# If not set, the caller may NOT have loaded the bundled version, and thus
+# they may not have a MI version that works with the Makefile.PL. This would
+# result in false errors or unexpected behaviour. And we don't want that.
 my $file = join( '/', 'inc', split /::/, __PACKAGE__ ) . '.pm';
 unless ( $INC{$file} ) {
     die <<"END_DIE";
@@ -26,6 +47,22 @@ Please invoke ${\__PACKAGE__} with:
 not:
 
     use ${\__PACKAGE__};
+
+END_DIE
+}
+
+# If the script that is loading Module::Install is from the future,
+# then make will detect this and cause it to re-run over and over
+# again. This is bad. Rather than taking action to touch it (which
+# is unreliable on some platforms and requires write permissions)
+# for now we should catch this and refuse to run.
+if ( -f $0 and (stat($0))[9] > time ) {
+	die << "END_DIE";
+Your installer $0 has a modification time in the future.
+
+This is known to create infinite loops in make.
+
+Please correct this, then run $0 again.
 
 END_DIE
 }
@@ -95,7 +132,7 @@ sub preload {
     my %seen;
     foreach my $obj ( @exts ) {
         while (my ($method, $glob) = each %{ref($obj) . '::'}) {
-            next unless exists &{ref($obj).'::'.$method};
+            next unless $obj->can($method);
             next if $method =~ /^_/;
             next if $method eq uc($method);
             $seen{$method}++;
@@ -136,7 +173,7 @@ sub new {
     }
     $args{file}     ||= "$args{base}/$args{prefix}/$args{path}.pm";
 
-    bless \%args, $class;
+    bless( \%args, $class );
 }
 
 sub call {
@@ -175,7 +212,6 @@ sub load_extensions {
         unshift @INC, $self->{prefix};
     }
 
-    local @INC = ($path, @INC);
     foreach my $rv ( $self->find_extensions($path) ) {
         my ($file, $pkg) = @{$rv};
         next if $self->{pathnames}{$pkg};
