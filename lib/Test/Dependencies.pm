@@ -18,11 +18,11 @@ Test::Dependencies - Ensure that your Makefile.PL specifies all module dependenc
 
 =head1 VERSION
 
-Version 0.04
+Version 0.06
 
 =cut
 
-our $VERSION = '0.05';
+our $VERSION = '0.06';
 
 =head1 SYNOPSIS
 
@@ -199,15 +199,15 @@ sub ok_dependencies {
   }  
 
   foreach my $mod (sort @in_core) {
-    $tb->ok(0, "Required module $mod is already in core");
+    $tb->ok(0, "Required module $mod is in core");
   }
   
   foreach my $mod (sort keys %required) {
-    $tb->ok(0, "$mod is not a dependency");
+    $tb->ok(0, "$mod is not a run-time dependency");
   }
 
   foreach my $mod (sort keys %build_required) {
-    $tb->ok(0, "$mod is not a build dependency");
+    $tb->ok(0, "$mod is not a build-time dependency");
   }
 
 }

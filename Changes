@@ -1,5 +1,9 @@
 Revision history for Test-Dependencies
 
+0.06    Wed Jul 19 16:31:08 EDT 2006
+        * better test descriptions when Makefile.PL contains extraneous requires calls
+        * forgot to bump version number in pod and forgot date in changelog in last revision
+
 0.05    Tue Jul 18 22:55:58 EDT 2006
         * removed references to test_pass (and upped Test::Builder::Tester dep to 0.64)
         * rearranged changelog
