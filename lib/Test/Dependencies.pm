@@ -22,7 +22,7 @@ Version 0.04
 
 =cut
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 =head1 SYNOPSIS
 
@@ -152,9 +152,16 @@ sub ok_dependencies {
   foreach my $mod (keys %used) {
     delete $build_used{$mod} if exists $build_used{$mod};
   }
-  
+
+  if (-r 'META.yml') {
+    $tb->ok(1, 'META.yml is present and readable');
+  } else {
+    $tb->ok(0, 'META.yml is present and readable');
+    $tb->diag("You seem to be missing a META.yml.  I can't check which dependencies you've declared without it\n");
+    return;
+  }
   my $meta = LoadFile('META.yml') or die 'Could not load META.YML';
-  my %required = exists $meta->{requires} ? %{$meta->{requires}} : ();
+  my %required = exists $meta->{requires} && defined $meta->{requires} ? %{$meta->{requires}} : ();
   my %build_required = exists $meta->{build_requires} ? %{$meta->{build_requires}} : ();
 
   my @in_core;

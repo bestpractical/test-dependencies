@@ -12,7 +12,7 @@ requires('PerlReq::Utils');
 requires('Test::Builder::Module');
 requires('YAML');
 
-build_requires('Test::Builder::Tester' => 0.63);
+build_requires('Test::Builder::Tester' => 0.64);
 
 auto_install;
 WriteAll;
