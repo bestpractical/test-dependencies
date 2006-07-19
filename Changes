@@ -1,6 +1,6 @@
 Revision history for Test-Dependencies
 
-0.05
+0.05    Tue Jul 18 22:55:58 EDT 2006
         * removed references to test_pass (and upped Test::Builder::Tester dep to 0.64)
         * rearranged changelog
         * added tests for empty files and directories
