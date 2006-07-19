@@ -12,3 +12,7 @@ Revision history for Test-Dependencies
         Makefile.PL.  We now differentiate between requires and
         build_requires, and complain if listed requirements are not
         actually used.
+
+0.04    Sat Jul 15 00:24:01 EDT 2006
+        * Properly specify the dependency on Test::Builder::Tester 0.63.
+        * handle empty files

@@ -18,11 +18,11 @@ Test::Dependencies - Ensure that your Makefile.PL specifies all module dependenc
 
 =head1 VERSION
 
-Version 0.03
+Version 0.04
 
 =cut
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 =head1 SYNOPSIS
 
@@ -93,15 +93,17 @@ sub _get_files_in {
 
 sub _taint_flag {
   my $filename = shift;
-  open FILE, $filename;
+  open FILE, $filename
+    or warn "Could not open '$filename': $!";
   my $shebang = <FILE>;
   close FILE;
-  chomp $shebang;
-  if ($shebang =~ m/^#!.*perl.*-T/) {
-    return '-T';
-  } else {
-    return '';
+  if (defined $shebang) {
+    chomp $shebang;
+    if ($shebang =~ m/^#!.*perl.*-T/) {
+      return '-T';
+    }
   }
+  return '';
 }
 
 sub _get_modules_used_in {
