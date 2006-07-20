@@ -14,5 +14,7 @@ requires('YAML');
 
 build_requires('Test::Builder::Tester' => 0.64);
 
+no_index directory => "t-data";
+
 auto_install;
 WriteAll;

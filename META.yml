@@ -7,6 +7,7 @@ license: perl
 name: Test-Dependencies
 no_index: 
   directory: 
+    - t-data
     - inc
     - t
 requires: 
@@ -16,4 +17,4 @@ requires:
   PerlReq::Utils: 0
   Test::Builder::Module: 0
   YAML: 0
-version: 0.05
+version: 0.06
