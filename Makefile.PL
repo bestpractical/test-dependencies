@@ -7,6 +7,7 @@ license 'perl';
 
 requires('B::PerlReq');
 requires('File::Find::Rule');
+requires('IPC::Cmd');
 requires('Module::CoreList');
 requires('PerlReq::Utils');
 requires('Test::Builder::Module');

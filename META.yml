@@ -13,8 +13,9 @@ no_index:
 requires: 
   B::PerlReq: 0
   File::Find::Rule: 0
+  IPC::Cmd: 0
   Module::CoreList: 0
   PerlReq::Utils: 0
   Test::Builder::Module: 0
   YAML: 0
-version: 0.07
+version: 0.08

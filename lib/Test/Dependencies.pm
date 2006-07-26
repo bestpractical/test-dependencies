@@ -6,6 +6,7 @@ use strict;
 use B::PerlReq;
 use Carp;
 use File::Find::Rule;
+use IPC::Cmd qw/run/;
 use Module::CoreList;
 use PerlReq::Utils qw(path2mod);
 use YAML qw(LoadFile);
@@ -18,11 +19,11 @@ Test::Dependencies - Ensure that your Makefile.PL specifies all module dependenc
 
 =head1 VERSION
 
-Version 0.07
+Version 0.08
 
 =cut
 
-our $VERSION = '0.07';
+our $VERSION = '0.08';
 
 =head1 SYNOPSIS
 
@@ -113,11 +114,15 @@ sub _get_modules_used_in {
   my %deps;
   foreach my $file (@sourcefiles) {
     my $taint = _taint_flag($file);
-    my $output = `$perl $taint -MO=PerlReq '$file' 2> /dev/null`;
-    # path2mod sucks, but the mod2path that B::PerlReq uses sucks, too
-    my @filedeps = map { s/^perl\((.+)\)$/$1/; path2mod($_) }
-               split /\n/, $output;
-    $deps{$_}++ foreach @filedeps;
+    my ($success, $error_code, $full_buf, $stdout_buf, $stderr_buf) =
+      run(command => [$perl, $taint, '-MO=PerlReq', $file]);
+    die "Could not compile '$file': error code: $error_code"
+      unless $success;
+    foreach my $line (@$stdout_buf) {
+      $line =~ m/^perl\((.+)\)$/;
+      # path2mod sucks, but the mod2path that B::PerlReq uses sucks, too
+      $deps{path2mod($1)}++;
+    }
   }
   return keys %deps;
 }

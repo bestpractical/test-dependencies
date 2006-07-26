@@ -1,5 +1,8 @@
 Revision history for Test-Dependencies
 
+0.08    Tue Jul 25 22:34:44 EDT 2006
+        * now using IPC::Cmd for subprocess communication (to avoid cross-platform issues)
+
 0.07    Thu Jul 20 17:51:08 EDT 2006
 	* added empty dummy file because Module::Install does not package empty directories
 
