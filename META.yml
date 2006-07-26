@@ -17,4 +17,4 @@ requires:
   PerlReq::Utils: 0
   Test::Builder::Module: 0
   YAML: 0
-version: 0.06
+version: 0.07

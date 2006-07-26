@@ -1,5 +1,8 @@
 Revision history for Test-Dependencies
 
+0.07    Thu Jul 20 17:51:08 EDT 2006
+	* added empty dummy file because Module::Install does not package empty directories
+
 0.06    Wed Jul 19 16:31:08 EDT 2006
         * better test descriptions when Makefile.PL contains extraneous requires calls
         * no_index'd t-data
