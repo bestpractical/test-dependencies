@@ -112,13 +112,21 @@ sub _get_modules_used_in {
   my @sourcefiles = _get_files_in(@dirs);
   my $perl = $^X;
   my %deps;
-  foreach my $file (@sourcefiles) {
+  foreach my $file (sort @sourcefiles) {
+    print "# source file $file\n";
     my $taint = _taint_flag($file);
     my ($success, $error_code, $full_buf, $stdout_buf, $stderr_buf) =
       run(command => [$perl, $taint, '-MO=PerlReq', $file]);
     die "Could not compile '$file': error code: $error_code"
       unless $success;
-    foreach my $line (@$stdout_buf) {
+
+    # for some reason IPC::Run doesn't always split lines correctly
+    my @lines;
+    push @lines, split /\n/ foreach @$stdout_buf;
+
+    foreach my $line (@lines) {
+      chomp $line;
+      my $x = $line;
       $line =~ m/^perl\((.+)\)$/;
       # path2mod sucks, but the mod2path that B::PerlReq uses sucks, too
       $deps{path2mod($1)}++;
