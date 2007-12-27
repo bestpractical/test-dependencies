@@ -113,7 +113,6 @@ sub _get_modules_used_in {
   my $perl = $^X;
   my %deps;
   foreach my $file (sort @sourcefiles) {
-    print "# source file $file\n";
     my $taint = _taint_flag($file);
     my ($success, $error_code, $full_buf, $stdout_buf, $stderr_buf) =
       run(command => [$perl, $taint, '-MO=PerlReq', $file]);
@@ -177,13 +176,12 @@ sub ok_dependencies {
   my %required = exists $meta->{requires} && defined $meta->{requires} ? %{$meta->{requires}} : ();
   my %build_required = exists $meta->{build_requires} ? %{$meta->{build_requires}} : ();
 
-  my @in_core;
-  
   foreach my $mod (sort keys %used) {
     my $first_in = Module::CoreList->first_release($mod);
     if (defined $first_in and $first_in <= 5.00803) {
+      $tb->ok(1, "run-time dependency '$mod' has been in core since before 5.8.3");
       delete $used{$mod};
-      push @in_core, $mod if exists $required{$mod};
+      delete $required{$mod};
       next;
     }
     if (defined $exclude_re && $mod =~ m/^($exclude_re)(::|$)/) {
@@ -198,8 +196,9 @@ sub ok_dependencies {
   foreach my $mod (sort keys %build_used) {
     my $first_in = Module::CoreList->first_release($mod);
     if (defined $first_in and $first_in <= 5.00803) {
+      $tb->ok(1, "build-time dependency '$mod' has been in core since before 5.8.3");
       delete $build_used{$mod};
-      push @in_core, $mod if exists $build_required{$mod};
+      delete $build_required{$mod};
       next;
     }
     if (defined $exclude_re && $mod =~ m/^($exclude_re)(::|$)/) {
@@ -211,10 +210,6 @@ sub ok_dependencies {
     delete $build_required{$mod};
   }  
 
-  foreach my $mod (sort @in_core) {
-    $tb->ok(0, "Required module $mod is in core");
-  }
-  
   foreach my $mod (sort keys %required) {
     $tb->ok(0, "$mod is not a run-time dependency");
   }
