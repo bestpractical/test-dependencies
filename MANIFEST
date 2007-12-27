@@ -22,8 +22,10 @@ t-data/mostly-empty/lib/empty
 t-data/mostly-empty/META.yml
 t/00-load-basic.t
 t/01-load-with-exclude.t
-t/02-dependencies.t
+t/02-dependencies-default.t
 t/03-empty.t
+t/04-dependencies-light.t
+t/05-dependencies-heavy.t
 t/boilerplate.t
 t/pod-coverage.t
 t/pod.t

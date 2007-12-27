@@ -23,4 +23,4 @@ requires:
   Pod::Strip: 0
   Test::Builder::Module: 0
   YAML: 0
-version: 0.09
+version: 0.10

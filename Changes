@@ -1,5 +1,8 @@
 Revision history for Test-Dependencies
 
+0.10    Thu Dec 27 03:28:17 EST 2007
+        * let users choose which method of module usage checking to use
+
 0.09    Wed Dec 26 19:51:12 EST 2007
         * work around bug in IPC::Cmd that prevented module from working
         * don't complain if specified dependencies are in core
