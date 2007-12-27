@@ -19,11 +19,11 @@ Test::Dependencies - Ensure that your Makefile.PL specifies all module dependenc
 
 =head1 VERSION
 
-Version 0.08
+Version 0.09
 
 =cut
 
-our $VERSION = '0.08';
+our $VERSION = '0.09';
 
 =head1 SYNOPSIS
 
@@ -278,7 +278,7 @@ L<http://search.cpan.org/dist/Test-Dependencies>
 
 =head1 LICENCE AND COPYRIGHT
 
-    Copyright (c) 2006, Best Practical Solutions, LLC. All rights reserved.
+    Copyright (c) 2007, Best Practical Solutions, LLC. All rights reserved.
 
     This module is free software; you can redistribute it and/or modify it
     under the same terms as Perl itself. See perlartistic.

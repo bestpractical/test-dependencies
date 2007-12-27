@@ -1,5 +1,9 @@
 Revision history for Test-Dependencies
 
+0.09    Wed Dec 26 19:51:12 EST 2007
+        * work around bug in IPC::Cmd that prevented module from working
+        * don't complain if specified dependencies are in core
+
 0.08    Tue Jul 25 22:34:44 EDT 2006
         * now using IPC::Cmd for subprocess communication (to avoid cross-platform issues)
 
