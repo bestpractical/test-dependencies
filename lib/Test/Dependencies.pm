@@ -7,7 +7,6 @@ use Carp;
 use File::Find::Rule;
 use Module::CoreList;
 use YAML qw(LoadFile);
-use Test::Dependencies::Heavy;
 
 use base 'Test::Builder::Module';
 
@@ -37,6 +36,44 @@ In your t/00-dependencies.t:
 Makes sure that all of the modules that are 'use'd are listed in the
 Makefile.PL as dependencies.
 
+=head1 OPTIONS
+
+You can pass options to the module via the 'use' line.  The available
+options are:
+
+=over 4
+
+=item exclude
+
+Specifies the list of namespaces for which it is ok not to have
+specified dependencies.
+
+=item style
+
+Specifies the style of module usage checking to use.  There are two
+valid values: "light" and "heavy".  The default is heavy.  The
+light style uses regular expressions to try and guess which modules
+are required.  It is fast, but can get confused by here-docs,
+multi-line strings, data sections, etc.  The heavy style actually
+compiles the file and asks perl which modules were used.  It is
+slower than the light style, but much more accurate.  If you have a
+very large project and you don't want to wait for the heavy style
+every time you run "make test," you might want to try the light
+style or look into the overrides below.
+
+Whether a style is specified or not, the style used can be overriden
+by the environment variable TDSTYLE.  This is useful, for example, if
+you want the heavy style to be used normally, but don't want to take
+the time checking dependencies on your smoke test server.
+
+Example usage:
+
+  use Test::Dependencies
+    exclude => ['Test::Dependencies'],
+    style => 'light';
+
+=back
+
 =cut
 
 our @EXPORT = qw/ok_dependencies/;
@@ -58,9 +95,31 @@ sub import {
     }
     $exclude_re = join '|', @{$args{exclude}};
   }
+
+  if (defined $ENV{TDSTYLE}) {
+    _choose_style($ENV{TDSTYLE});
+  } else {
+    if (defined $args{style}) {
+      _choose_style($args{style});
+    } else {
+      _choose_style('heavy');
+    }
+  }
+
   $package->export_to_level(1, '', qw/ok_dependencies/);
 }
 
+sub _choose_style {
+  my $style = shift;
+  if (lc $style eq 'light') {
+    eval 'use Test::Dependencies::Light';
+  } elsif (lc $style eq 'heavy') {
+    eval 'use Test::Dependencies::Heavy';
+  } else {
+    carp "Unknown style: '", $style, "'";
+  }
+}
+    
 sub _get_files_in {
   my @dirs = @_;
   my $rule = File::Find::Rule->new;
