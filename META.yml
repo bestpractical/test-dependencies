@@ -20,6 +20,7 @@ requires:
   IPC::Cmd: 0
   Module::CoreList: 0
   PerlReq::Utils: 0
+  Pod::Strip: 0
   Test::Builder::Module: 0
   YAML: 0
 version: 0.09

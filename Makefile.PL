@@ -10,6 +10,7 @@ requires('File::Find::Rule');
 requires('IPC::Cmd');
 requires('Module::CoreList');
 requires('PerlReq::Utils');
+requires('Pod::Strip');
 requires('Test::Builder::Module');
 requires('YAML');
 
