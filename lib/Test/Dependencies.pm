@@ -46,22 +46,19 @@ our @EXPORT = qw/ok_dependencies/;
 our $exclude_re;
 
 sub import {
-  my $package = $_[0];
+  my $package = shift;
+  my %args = @_;
   my $callerpack = caller;
   my $tb = __PACKAGE__->builder;
   $tb->exported_to($callerpack);
   $tb->no_plan;
 
-  if (scalar @_ == 3) {
-    # package name, literal exclude, excluded namespaces
-    my $exclude = $_[2];
-    foreach my $namespace (@$exclude) {
+  if (defined $args{exclude}) {
+    foreach my $namespace (@{$args{exclude}}) {
       croak "$namespace is not a valid namespace"
         unless $namespace =~ m/^(?:(?:\w+::)|)+\w+$/;
     }
-    $exclude_re = join '|', @$exclude;
-  } elsif (scalar @_ != 1) {
-    croak "wrong number of arguments while using Test::Dependencies: " . join ' ', @_;
+    $exclude_re = join '|', @{$args{exclude}};
   }
   $package->export_to_level(1, '', qw/ok_dependencies/);
 }
