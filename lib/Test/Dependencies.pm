@@ -3,13 +3,11 @@ package Test::Dependencies;
 use warnings;
 use strict;
 
-use B::PerlReq;
 use Carp;
 use File::Find::Rule;
-use IPC::Cmd qw/run/;
 use Module::CoreList;
-use PerlReq::Utils qw(path2mod);
 use YAML qw(LoadFile);
+use Test::Dependencies::Heavy;
 
 use base 'Test::Builder::Module';
 
@@ -89,54 +87,23 @@ sub _get_files_in {
   return $rule->in(grep {-e $_} @dirs);
 }
 
-sub _taint_flag {
-  my $filename = shift;
-  open FILE, $filename
-    or warn "Could not open '$filename': $!";
-  my $shebang = <FILE>;
-  close FILE;
-  if (defined $shebang) {
-    chomp $shebang;
-    if ($shebang =~ m/^#!.*perl.*-T/) {
-      return '-T';
-    }
-  }
-  return '';
-}
-
-sub _get_modules_used_in {
+sub _get_modules_used_in_dir {
   my @dirs = @_;
   my @sourcefiles = _get_files_in(@dirs);
-  my $perl = $^X;
-  my %deps;
+  my @modules;
+
   foreach my $file (sort @sourcefiles) {
-    my $taint = _taint_flag($file);
-    my ($success, $error_code, $full_buf, $stdout_buf, $stderr_buf) =
-      run(command => [$perl, $taint, '-MO=PerlReq', $file]);
-    die "Could not compile '$file': error code: $error_code"
-      unless $success;
-
-    # for some reason IPC::Run doesn't always split lines correctly
-    my @lines;
-    push @lines, split /\n/ foreach @$stdout_buf;
-
-    foreach my $line (@lines) {
-      chomp $line;
-      my $x = $line;
-      $line =~ m/^perl\((.+)\)$/;
-      # path2mod sucks, but the mod2path that B::PerlReq uses sucks, too
-      $deps{path2mod($1)}++;
-    }
+    push @modules, get_modules_used_in_file($file);
   }
-  return keys %deps;
+  return @modules;
 }
 
 sub _get_used {
-  return _get_modules_used_in(qw/bin lib/);
+  return _get_modules_used_in_dir(qw/bin lib/);
 }
 
 sub _get_build_used {
-  return _get_modules_used_in(qw/t/);
+  return _get_modules_used_in_dir(qw/t/);
 }
 
 =head1 EXPORTED FUNCTIONS
