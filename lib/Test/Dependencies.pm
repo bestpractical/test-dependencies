@@ -93,7 +93,11 @@ sub _get_modules_used_in_dir {
   my @modules;
 
   foreach my $file (sort @sourcefiles) {
-    push @modules, get_modules_used_in_file($file);
+    my $ret = get_modules_used_in_file($file);
+    if (! defined $ret) {
+      die "Could not determine modules used in '$file'";
+    }
+    push @modules, @$ret;
   }
   return @modules;
 }

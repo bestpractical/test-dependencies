@@ -25,9 +25,10 @@ This module exports exactly one function.
 
 =head2 get_modules_used_in_file
 
-Returns all the modules that the passed file uses.  This style
-determines this list by actually compiling the code.  This could be a
-dangerous operation if the file does bad things in BEGIN blocks!
+Returns an array ref of all the modules that the passed file uses.
+This style determines this list by actually compiling the code.  This
+could be a dangerous operation if the file does bad things in BEGIN
+blocks!
 
 =cut
 
@@ -39,8 +40,7 @@ sub get_modules_used_in_file {
   my $taint = _taint_flag($file);
   my ($success, $error_code, $full_buf, $stdout_buf, $stderr_buf) =
     run(command => [$perl, $taint, '-MO=PerlReq', $file]);
-  die "Could not compile '$file': error code: $error_code"
-    unless $success;
+  return undef unless $success;
 
   # for some reason IPC::Run doesn't always split lines correctly
   my @lines;
@@ -53,7 +53,7 @@ sub get_modules_used_in_file {
     # path2mod sucks, but the mod2path that B::PerlReq uses sucks, too
     $deps{path2mod($1)}++;
   }
-  return keys %deps;
+  return [keys %deps];
 }
 
 sub _taint_flag {
