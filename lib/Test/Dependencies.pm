@@ -195,11 +195,13 @@ sub ok_dependencies {
     my %build_required
         = exists $meta->{build_requires} ? %{ $meta->{build_requires} } : ();
 
+    my $min_perl = $required{perl} || 5.008003;
+
     foreach my $mod ( sort keys %used ) {
         my $first_in = Module::CoreList->first_release($mod);
-        if ( defined $first_in and $first_in <= 5.00803 ) {
+        if ( defined $first_in and $first_in <= $min_perl ) {
             $tb->ok( 1,
-                "run-time dependency '$mod' has been in core since before 5.8.3"
+                "run-time dependency '$mod' has been in core since $first_in, before $min_perl"
             );
             delete $used{$mod};
             delete $required{$mod};
@@ -216,9 +218,9 @@ sub ok_dependencies {
 
     foreach my $mod ( sort keys %build_used ) {
         my $first_in = Module::CoreList->first_release($mod);
-        if ( defined $first_in and $first_in <= 5.00803 ) {
+        if ( defined $first_in and $first_in <= $min_perl ) {
             $tb->ok( 1,
-                "build-time dependency '$mod' has been in core since before 5.8.3"
+                "build-time dependency '$mod' has been in core since $first_in, before $min_perl"
             );
             delete $build_used{$mod};
             delete $build_required{$mod};
