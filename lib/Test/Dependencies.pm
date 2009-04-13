@@ -171,13 +171,15 @@ are listed are not in the core list.
 =cut
 
 sub ok_dependencies {
-    my $tb         = __PACKAGE__->builder;
-    my %used       = map { $_ => 1 } _get_used;
-    my %build_used = map { $_ => 1 } _get_build_used;
+    my $tb   = __PACKAGE__->builder;
+    my %used = (
+        run  => { map { $_ => 1 } _get_used },
+        build => { map { $_ => 1 } _get_build_used },
+    );
 
     # remove modules from build deps if they are hard deps
-    foreach my $mod ( keys %used ) {
-        delete $build_used{$mod} if exists $build_used{$mod};
+    foreach my $mod ( keys %{ $used{run} } ) {
+        delete $used{build}{$mod} if exists $used{build}{$mod};
     }
 
     if ( -r 'META.yml' ) {
@@ -190,60 +192,42 @@ sub ok_dependencies {
         return;
     }
     my $meta = LoadFile('META.yml') or die 'Could not load META.YML';
-    my %required = exists $meta->{requires}
-        && defined $meta->{requires} ? %{ $meta->{requires} } : ();
-    my %build_required
-        = exists $meta->{build_requires} ? %{ $meta->{build_requires} } : ();
+    my %required = (
+        run   => $meta->{requires}       || {},
+        build => $meta->{build_requires} || {},
+    );
 
-    my $min_perl = $required{perl} || 5.008003;
+    my $min_perl = $required{run}{perl} || 5.008003;
 
-    foreach my $mod ( sort keys %used ) {
-        my $first_in = Module::CoreList->first_release($mod);
-        if ( defined $first_in and $first_in <= $min_perl ) {
-            $tb->ok( 1,
-                "run-time dependency '$mod' has been in core since $first_in, before $min_perl"
+    for my $stage (qw/run build/) {
+        foreach my $mod ( sort keys %{ $used{$stage} } ) {
+            my $first_in = Module::CoreList->first_release($mod);
+            if ( defined $first_in and $first_in <= $min_perl ) {
+                $tb->ok( 1,
+                    "$stage-time dependency '$mod' has been in core since $first_in, before $min_perl"
+                );
+                delete $used{$stage}{$mod};
+                delete $required{$stage}{$mod};
+                next;
+            }
+            if ( defined $exclude_re && $mod =~ m/^($exclude_re)(::|$)/ ) {
+                delete $used{$stage}{$mod};
+                next;
+            }
+            $tb->ok(
+                exists $required{$stage}{$mod},
+                "requires('$mod') in Makefile.PL"
             );
-            delete $used{$mod};
-            delete $required{$mod};
-            next;
+            delete $used{$stage}{$mod};
+            delete $required{$stage}{$mod};
         }
-        if ( defined $exclude_re && $mod =~ m/^($exclude_re)(::|$)/ ) {
-            delete $used{$mod};
-            next;
-        }
-        $tb->ok( exists $required{$mod}, "requires('$mod') in Makefile.PL" );
-        delete $used{$mod};
-        delete $required{$mod};
     }
 
-    foreach my $mod ( sort keys %build_used ) {
-        my $first_in = Module::CoreList->first_release($mod);
-        if ( defined $first_in and $first_in <= $min_perl ) {
-            $tb->ok( 1,
-                "build-time dependency '$mod' has been in core since $first_in, before $min_perl"
-            );
-            delete $build_used{$mod};
-            delete $build_required{$mod};
-            next;
+    for my $stage (qw/run build/) {
+        foreach my $mod ( sort keys %{ $required{$stage} } ) {
+            $tb->ok( 0, "$mod is not a $stage-time dependency" );
         }
-        if ( defined $exclude_re && $mod =~ m/^($exclude_re)(::|$)/ ) {
-            delete $build_used{$mod};
-            next;
-        }
-        $tb->ok( exists $build_required{$mod},
-            "build_requires('$mod') in Makefile.PL" );
-        delete $build_used{$mod};
-        delete $build_required{$mod};
     }
-
-    foreach my $mod ( sort keys %required ) {
-        $tb->ok( 0, "$mod is not a run-time dependency" );
-    }
-
-    foreach my $mod ( sort keys %build_required ) {
-        $tb->ok( 0, "$mod is not a build-time dependency" );
-    }
-
 }
 
 =head1 AUTHORS
