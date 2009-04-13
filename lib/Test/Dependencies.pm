@@ -12,7 +12,7 @@ use base 'Test::Builder::Module';
 
 =head1 NAME
 
-Test::Dependencies - Ensure that your Makefile.PL specifies all module dependencies
+Test::Dependencies - Ensure that your META.yml specifies all module dependencies
 
 =head1 VERSION
 
@@ -34,7 +34,7 @@ In your t/00-dependencies.t:
 =head1 DESCRIPTION
 
 Makes sure that all of the modules that are 'use'd are listed in the
-Makefile.PL as dependencies.
+META.yml as dependencies.
 
 =head1 OPTIONS
 
@@ -164,7 +164,7 @@ sub _get_build_used {
 This should be the only test called in the test file.  It scans
 bin/ and lib/ for module usage and t/ for build usage.  It will
 then test that all modules used are listed as required in
-Makefile.PL, all modules used in t/ are listed as build required,
+META.yml, all modules used in t/ are listed as build required,
 that all modules listed are actually used, and that modules that
 are listed are not in the core list.
 
@@ -216,7 +216,7 @@ sub ok_dependencies {
             }
             $tb->ok(
                 exists $required{$stage}{$mod},
-                "requires('$mod') in Makefile.PL"
+                "requires('$mod') in META.yml"
             );
             delete $used{$stage}{$mod};
             delete $required{$stage}{$mod};
