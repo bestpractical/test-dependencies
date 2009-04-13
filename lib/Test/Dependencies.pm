@@ -48,6 +48,11 @@ options are:
 Specifies the list of namespaces for which it is ok not to have
 specified dependencies.
 
+=item file_exclude
+
+Specifies a regular expression of files to exclude from dependency
+checking.
+
 =item style
 
 Specifies the style of module usage checking to use.  There are two
@@ -79,6 +84,7 @@ Example usage:
 our @EXPORT = qw/ok_dependencies/;
 
 our $exclude_re;
+our $file_exclude;
 
 sub import {
     my $package    = shift;
@@ -95,6 +101,8 @@ sub import {
         }
         $exclude_re = join '|', @{ $args{exclude} };
     }
+
+    $file_exclude = $args{file_exclude};
 
     if ( defined $ENV{TDSTYLE} ) {
         _choose_style( $ENV{TDSTYLE} );
@@ -129,12 +137,14 @@ sub _get_files_in {
         $rule->new->name(qr/~$/)->discard,
         $rule->new->name(qr/\.pod$/)->discard,
         $rule->new->not( $rule->new->file )->discard,
+        ($file_exclude ? ($rule->new->name($file_exclude)->discard) : () ),
         $rule->new
     );
     return $rule->in( grep { -e $_ } @dirs );
 }
 
 sub _get_modules_used_in_dir {
+    my $tb   = __PACKAGE__->builder;
     my @dirs        = @_;
     my @sourcefiles = _get_files_in(@dirs);
     my @modules;
@@ -142,9 +152,11 @@ sub _get_modules_used_in_dir {
     foreach my $file ( sort @sourcefiles ) {
         my $ret = get_modules_used_in_file($file);
         if ( !defined $ret ) {
-            die "Could not determine modules used in '$file'";
+            local $Test::Builder::Level = $Test::Builder::Level + 2;
+            $tb->ok(0, "Could not determine modules used in '$file'");
+        } else {
+            push @modules, @$ret;
         }
-        push @modules, @$ret;
     }
     return @modules;
 }
