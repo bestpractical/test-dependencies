@@ -37,6 +37,7 @@ sub get_modules_used_in_file {
   my $perl = $^X;
   my %deps;
 
+  local $ENV{PERL5OPT};
   my $taint = _taint_flag($file);
   my ($success, $error_code, $full_buf, $stdout_buf, $stderr_buf) =
     run(command => [$perl, $taint, '-MO=PerlReq', $file]);
