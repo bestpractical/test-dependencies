@@ -134,7 +134,8 @@ sub _get_files_in {
     $rule->or(
         $rule->new->directory->name('.svn')->prune->discard,
         $rule->new->directory->name('CVS')->prune->discard,
-        $rule->new->name(qr/~$/)->discard,
+        $rule->new->name(qr/(?:~|.sw[op])$/)->discard,
+        $rule->new->name(qr/^.#/)->discard,
         $rule->new->name(qr/\.pod$/)->discard,
         $rule->new->not( $rule->new->file )->discard,
         ($file_exclude ? ($rule->new->name($file_exclude)->discard) : () ),
